@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Community Resource Navigator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Albert+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf5ec;
+  --paper-deep: #f3ecdd;
+  --card: #fffdf8;
+  --ink: #1f3833;
+  --ink-soft: #5b6f6a;
+  --line: #e3dac7;
+  --spruce: #2c5f54;
+  --spruce-deep: #1f4a41;
+  --coral: #d95f43;
+  --coral-soft: #fbe9e3;
+  --gold: #8a6420;      /* dark enough for text on light backgrounds (WCAG) */
+  --gold-soft: #f8efd8;
+  --green-soft: #e2efe4;
+  --green-ink: #2f6b40;
+  --red-soft: #f6e3e0;
+  --red-ink: #a13a2a;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(31,56,51,.06), 0 8px 24px -12px rgba(31,56,51,.18);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: clip; }
+body {
+  font-family: "Albert Sans", sans-serif;
+  background:
+    radial-gradient(1200px 400px at 85% -10%, rgba(217,95,67,.07), transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, rgba(44,95,84,.08), transparent 55%),
+    var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+a { color: var(--spruce); }
+:focus-visible { outline: 2px solid var(--spruce); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ---------- topbar (wordmark + nav on one line) ---------- */
+header.topbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  flex-wrap: wrap; padding: 14px 32px 0;
+  background: rgba(250,245,236,.92); backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  font-family: "Fraunces", serif; font-weight: 600; font-size: 19px;
+  letter-spacing: -.01em; padding-bottom: 12px; white-space: nowrap;
+}
+.brand .mark { color: var(--coral); margin-right: 6px; }
+.brand b { font-weight: 700; color: var(--spruce-deep); }
+
+/* stat cards (reused on the landing) */
+.stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 12px 18px; min-width: 118px; box-shadow: var(--shadow);
+}
+.stat b { display: block; font-family: "Fraunces", serif; font-size: 24px; font-weight: 600; }
+.stat span { font-size: 11.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
+
+/* ---------- landing ---------- */
+.landing { max-width: 980px; margin: 0 auto; }
+.hero { padding: 56px 0 34px; max-width: 640px; }
+.eyebrow {
+  font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--coral); margin: 0 0 14px;
+}
+.hero h1 {
+  font-family: "Fraunces", serif; font-weight: 700; letter-spacing: -.015em;
+  font-size: clamp(30px, 5.4vw, 46px); line-height: 1.06; margin: 0 0 16px;
+  overflow-wrap: anywhere;
+}
+.hero .lede { font-size: 16.5px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 22px; max-width: 54ch; }
+.hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero-cta button { padding: 12px 22px; font-size: 15px; }
+.hero > * { opacity: 0; transform: translateY(10px); animation: rise .5s var(--rise-ease, ease-out) forwards; }
+.hero > *:nth-child(2) { animation-delay: .07s; }
+.hero > *:nth-child(3) { animation-delay: .14s; }
+.hero > *:nth-child(4) { animation-delay: .21s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+.statband { display: flex; gap: 10px; flex-wrap: wrap; padding: 6px 0 40px; }
+.statband .stat { flex: 1 1 150px; }
+.landing h2.section {
+  font-family: "Fraunces", serif; font-weight: 600; font-size: 22px; margin: 0 0 16px;
+}
+.steps { padding: 8px 0 34px; }
+.stepgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px; }
+.step {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px 20px; position: relative;
+}
+.step .n {
+  font-family: "Fraunces", serif; font-size: 26px; font-weight: 700; color: var(--coral);
+}
+.step h3 { font-family: "Fraunces", serif; font-weight: 600; font-size: 16.5px; margin: 6px 0 6px; }
+.step p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.step .go { margin-top: 12px; }
+.trustband {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 12px; padding: 0 0 44px;
+}
+.trust {
+  border-left: 3px solid var(--spruce); background: var(--card);
+  border-radius: 0 10px 10px 0; padding: 14px 16px; font-size: 14px;
+}
+.trust b { display: block; font-family: "Fraunces", serif; font-weight: 600; margin-bottom: 3px; }
+.trust span { color: var(--ink-soft); }
+.landing footer {
+  border-top: 1px solid var(--line); padding: 16px 0 40px;
+  font-size: 12.5px; color: var(--ink-soft);
+}
+
+/* ---------- toolbar ---------- */
+.toolbar {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  padding: 18px 32px;
+}
+.toolbar input[type=search], .toolbar select {
+  font: inherit; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 12px;
+}
+.toolbar input[type=search] { flex: 1 1 260px; min-width: 200px; }
+.toolbar input[type=search]:focus, .toolbar select:focus {
+  outline: 2px solid var(--spruce); outline-offset: 1px;
+}
+.toolbar .spacer { flex: 1; }
+button {
+  font: inherit; font-weight: 600; border-radius: 8px; cursor: pointer;
+  padding: 9px 16px; border: 1px solid transparent;
+}
+.btn-primary { background: var(--spruce); color: #fff; }
+.btn-primary:hover { background: var(--spruce-deep); }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+.btn-ghost:hover { background: var(--paper-deep); }
+.btn-coral { background: var(--coral); color: #fff; }
+.btn-coral:hover { filter: brightness(.94); }
+#clearBtn { display: none; }
+
+/* ---------- table ---------- */
+main { padding: 0 32px 60px; }
+.count-line { color: var(--ink-soft); font-size: 13px; margin: 0 0 10px 2px; }
+table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow);
+}
+thead th {
+  text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--ink-soft); font-weight: 600;
+  padding: 12px 14px; background: var(--paper-deep); border-bottom: 1px solid var(--line);
+}
+tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr { cursor: pointer; transition: background .12s; }
+tbody tr:hover { background: #f6f0e2; }
+.org b { font-weight: 600; }
+.org .type { display: block; font-size: 13px; color: var(--ink-soft); }
+.chip {
+  display: inline-block; font-size: 12px; font-weight: 600;
+  background: var(--paper-deep); border: 1px solid var(--line);
+  border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+}
+.pill { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.pill.active { background: var(--green-soft); color: var(--green-ink); }
+.pill.needs_review { background: var(--gold-soft); color: var(--gold); }
+.pill.inactive { background: var(--red-soft); color: var(--red-ink); }
+.vbadge { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.vbadge.ok { color: var(--green-ink); }
+.vbadge.stale { color: var(--gold); }
+.vbadge.never { color: var(--ink-soft); font-weight: 400; }
+.empty { text-align: center; color: var(--ink-soft); padding: 48px 0 !important; cursor: default; }
+td.phone { white-space: pre-line; font-size: 13.5px; }
+
+/* ---------- drawer ---------- */
+.overlay {
+  position: fixed; inset: 0; background: rgba(31,56,51,.32);
+  opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40;
+}
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 94vw);
+  background: var(--card); border-left: 1px solid var(--line);
+  box-shadow: -16px 0 40px -20px rgba(31,56,51,.35);
+  transform: translateX(102%); transition: transform .22s ease; z-index: 50;
+  display: flex; flex-direction: column;
+}
+body.drawer-open .overlay { opacity: 1; pointer-events: auto; }
+body.drawer-open .drawer { transform: none; }
+.drawer-head {
+  padding: 20px 24px 14px; border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+}
+.drawer-head h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 21px; margin: 0; }
+.drawer-head .close { background: none; border: 0; font-size: 22px; color: var(--ink-soft); padding: 2px 6px; }
+.drawer form { overflow-y: auto; padding: 18px 24px 24px; flex: 1; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { margin-bottom: 12px; }
+.field label {
+  display: block; font-size: 12px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px;
+}
+.field input, .field select, .field textarea {
+  width: 100%; font: inherit; color: var(--ink);
+  background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+}
+.field textarea { resize: vertical; min-height: 56px; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: 2px solid var(--spruce); outline-offset: 1px;
+}
+.checks { display: flex; gap: 18px; flex-wrap: wrap; margin: 4px 0 14px; }
+.checks label { font-size: 14px; display: flex; gap: 6px; align-items: center; }
+.drawer-foot {
+  padding: 14px 24px; border-top: 1px solid var(--line);
+  display: flex; gap: 10px; justify-content: flex-end; background: var(--paper-deep);
+}
+.form-errors { color: var(--red-ink); font-size: 13.5px; margin: 0 0 10px; white-space: pre-line; }
+.section-note {
+  font-family: "Fraunces", serif; font-style: italic; color: var(--ink-soft);
+  font-size: 14px; margin: 18px 0 10px; border-top: 1px dashed var(--line); padding-top: 14px;
+}
+/* ---------- nav tabs (underline style, inside topbar) ---------- */
+nav.tabs { display: flex; gap: 2px; flex-wrap: wrap; }
+nav.tabs button {
+  background: transparent; border: none; border-bottom: 3px solid transparent;
+  padding: 10px 14px 12px; font-weight: 600; font-size: 14.5px;
+  color: var(--ink-soft); white-space: nowrap; border-radius: 6px 6px 0 0;
+}
+nav.tabs button:hover { color: var(--ink); background: rgba(44,95,84,.06); }
+nav.tabs button.on { color: var(--spruce-deep); border-bottom-color: var(--coral); }
+nav.tabs .badge {
+  display: inline-block; min-width: 20px; text-align: center; margin-left: 6px;
+  background: var(--coral); color: #fff; border-radius: 999px;
+  font-size: 11.5px; padding: 1px 6px; vertical-align: 1px;
+}
+nav.tabs .badge:empty { display: none; }
+
+/* ---------- review queue ---------- */
+.review-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 18px 0 14px;
+}
+.review-bar .status { color: var(--ink-soft); font-size: 13.5px; }
+.progress {
+  flex: 1 1 160px; max-width: 260px; height: 8px; border-radius: 999px;
+  background: var(--paper-deep); border: 1px solid var(--line); overflow: hidden;
+}
+.progress > div { height: 100%; background: var(--spruce); width: 0; transition: width .4s; }
+.check-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 14px;
+}
+.check-card .head {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.check-card .head b { font-family: "Fraunces", serif; font-size: 17px; font-weight: 600; }
+.check-card .meta { font-size: 12.5px; color: var(--ink-soft); }
+.vpill { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 10px; }
+.vpill.possibly_inactive { background: var(--red-soft); color: var(--red-ink); }
+.vpill.changed { background: var(--gold-soft); color: var(--gold); }
+.vpill.unreachable { background: #e8e4f3; color: #5b4a8a; }
+.vpill.needs_manual_check { background: var(--paper-deep); color: var(--ink-soft); }
+.vpill.error { background: var(--red-soft); color: var(--red-ink); }
+.vpill.confirmed { background: var(--green-soft); color: var(--green-ink); }
+.evidence {
+  border-left: 3px solid var(--line); margin: 10px 0; padding: 4px 12px;
+  color: var(--ink-soft); font-style: italic; font-size: 14px;
+}
+.diff { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13.5px; }
+.diff th { text-align: left; font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--ink-soft); padding: 4px 10px 4px 0; }
+.diff td { padding: 6px 10px 6px 0; vertical-align: top; border-top: 1px dashed var(--line); }
+.diff .old { color: var(--red-ink); text-decoration: line-through; text-decoration-color: rgba(161,58,42,.4); }
+.diff .colapply { width: 54px; text-align: center; }
+.diff .apply-field { width: 17px; height: 17px; accent-color: var(--spruce); cursor: pointer; }
+.diff .fieldname { white-space: nowrap; }
+.diff .new-val {
+  width: 100%; min-width: 180px; font: inherit; font-size: 13.5px;
+  color: var(--green-ink); font-weight: 600; background: var(--green-soft);
+  border: 1px solid #c7e0cd; border-radius: 6px; padding: 5px 8px; resize: vertical;
+}
+.diff .new-val:focus { outline: 2px solid var(--spruce); outline-offset: 1px; background: #fff; }
+.diff tr.skipped .new-val { opacity: .4; background: var(--paper-deep); color: var(--ink-soft);
+  border-color: var(--line); text-decoration: line-through; }
+.diff-hint { font-size: 12.5px; color: var(--ink-soft); margin: 2px 0 0; }
+.check-card .actions { display: flex; gap: 10px; margin-top: 12px; }
+.btn-approve { background: var(--spruce); color: #fff; padding: 7px 18px; }
+.btn-approve:hover { background: var(--spruce-deep); }
+.btn-reject { background: transparent; border-color: var(--line); color: var(--red-ink); }
+.btn-reject:hover { background: var(--red-soft); }
+.review-empty {
+  text-align: center; color: var(--ink-soft); padding: 56px 0;
+  font-family: "Fraunces", serif; font-style: italic; font-size: 17px;
+}
+.run-error { color: var(--red-ink); font-size: 13.5px; }
+
+/* ---------- matching (Find Resources) ---------- */
+.match-form {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 20px 22px; margin: 18px 0;
+}
+.match-form h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 19px; margin: 0 0 4px; }
+.match-form .privacy {
+  font-size: 12.5px; color: var(--ink-soft); margin: 0 0 14px;
+}
+.match-form .privacy b { color: var(--red-ink); }
+fieldset.checks-group { border: none; padding: 0; margin: 0 0 14px; }
+fieldset.checks-group legend {
+  font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 6px; padding: 0;
+}
+.checkgrid { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.checkgrid label {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px;
+  background: var(--paper-deep); border: 1px solid var(--line); border-radius: 999px;
+  padding: 5px 12px; cursor: pointer; user-select: none;
+}
+.checkgrid label:has(input:checked) {
+  background: var(--spruce); border-color: var(--spruce); color: #fff;
+}
+.checkgrid input { position: absolute; opacity: 0; pointer-events: none; }
+.match-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.match-row .field { flex: 1 1 220px; margin: 0; }
+.match-form textarea, .match-form input[type=text] {
+  width: 100%; font: inherit; color: var(--ink); background: #fff;
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+}
+.match-form textarea:focus, .match-form input[type=text]:focus {
+  outline: 2px solid var(--spruce); outline-offset: 1px;
+}
+.match-submit { display: flex; align-items: center; gap: 12px; }
+.match-note {
+  background: var(--gold-soft); border: 1px solid #e4d3a6; color: #7a5c1e;
+  border-radius: 8px; padding: 10px 14px; font-size: 13.5px; margin: 0 0 14px;
+}
+.match-actions { display: flex; gap: 10px; margin: 0 0 14px; flex-wrap: wrap; align-items: center; }
+.match-actions .count { color: var(--ink-soft); font-size: 13.5px; }
+.match-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px 20px; margin-bottom: 12px;
+  display: flex; gap: 14px;
+}
+.match-card .ranknum {
+  font-family: "Fraunces", serif; font-size: 22px; font-weight: 700;
+  color: var(--coral); min-width: 26px; line-height: 1.2;
+}
+.match-card .body { flex: 1; }
+.match-card .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.match-card .head b { font-family: "Fraunces", serif; font-size: 16.5px; font-weight: 600; }
+.match-card .why {
+  margin: 6px 0 8px; padding: 7px 12px; background: var(--green-soft);
+  border-radius: 8px; color: var(--green-ink); font-size: 14px;
+}
+.match-card .facts { font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+.match-card .facts span { color: var(--ink-soft); }
+.match-card .seasonal {
+  display: inline-block; margin-top: 6px; font-size: 12.5px; font-weight: 600;
+  background: var(--gold-soft); color: var(--gold); border-radius: 999px; padding: 2px 10px;
+}
+.stale-flag { font-size: 12px; font-weight: 700; color: var(--gold); }
+.match-empty { text-align: center; color: var(--ink-soft); padding: 40px 0;
+  font-family: "Fraunces", serif; font-style: italic; font-size: 16px; }
+h3.match-group {
+  font-family: "Fraunces", serif; font-size: 17.5px; font-weight: 600;
+  margin: 22px 0 10px; padding-bottom: 5px; border-bottom: 2px solid var(--line);
+  display: flex; align-items: baseline; gap: 8px;
+}
+h3.match-group .gcount {
+  font-family: "Albert Sans", sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--ink-soft); background: var(--paper-deep); border: 1px solid var(--line);
+  border-radius: 999px; padding: 1px 9px;
+}
+.share-box {
+  display: none; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 12px; font-size: 13px; width: 100%;
+}
+.share-box input {
+  flex: 1 1 260px; font: inherit; font-size: 13px; color: var(--spruce);
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; background: var(--paper);
+}
+.share-box .hint { color: var(--ink-soft); flex-basis: 100%; font-size: 12px; }
+.spin { display: inline-block; width: 15px; height: 15px; border: 2px solid var(--line);
+  border-top-color: var(--spruce); border-radius: 50%; animation: spin .8s linear infinite;
+  vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.print-head { display: none; }
+
+@media (max-width: 720px) {
+  header.topbar, .toolbar, main { padding-left: 16px; padding-right: 16px; }
+  header.topbar { position: static; }        /* don't eat phone screen height */
+  nav.tabs { flex-wrap: nowrap; overflow-x: auto; width: 100%;
+             scrollbar-width: none; }        /* one swipeable row */
+  nav.tabs::-webkit-scrollbar { display: none; }
+  .hero { padding-top: 34px; }
+  .grid2 { grid-template-columns: 1fr; }
+  th.hide-sm, td.hide-sm { display: none; }
+}
+
+/* ---------- print: the family handout (resources only, no inputs) ---------- */
+@media print {
+  header, nav.tabs, .toolbar, .drawer, .overlay, #viewHome,
+  #viewDirectory, #viewReview, .match-form, .match-actions, .match-note { display: none !important; }
+  body { background: #fff; color: #000; font-size: 12px; }
+  main { padding: 0; }
+  .print-head { display: block; border-bottom: 2px solid #000; margin-bottom: 12px; padding-bottom: 8px; }
+  .print-head h2 { font-family: "Fraunces", serif; margin: 0 0 2px; font-size: 20px; }
+  .print-head p { margin: 0; font-size: 11px; color: #333; }
+  .match-card { box-shadow: none; border: 1px solid #999; break-inside: avoid;
+    margin-bottom: 8px; padding: 10px 14px; }
+  .match-card .why { background: #f0f0f0; color: #000; }
+  .match-card .ranknum { color: #000; }
+  .chip, .vbadge, .stale-flag { border-color: #999; }
+  h3.match-group { border-bottom: 1.5px solid #000; break-after: avoid; margin-top: 14px; }
+  h3.match-group .gcount { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="mark">&#10037;</span>Community Resource <b>Navigator</b></div>
+  <nav class="tabs">
+    <button id="tabHome" class="on" type="button">Home</button>
+    <button id="tabDirectory" type="button">Directory</button>
+    <button id="tabMatch" type="button">Find Resources</button>
+    <button id="tabReview" type="button">Review Queue<span class="badge" id="reviewBadge"></span></button>
+  </nav>
+</header>
+
+<div id="viewHome">
+<main class="landing">
+  <section class="hero">
+    <p class="eyebrow">Internal tool &middot; clinic care team</p>
+    <h1>Get families the local help they qualify for.</h1>
+    <p class="lede">Search a verified directory of local assistance programs, match
+      them to a family&rsquo;s situation in seconds, and send the list home with
+      them &mdash; printed, texted, or emailed.</p>
+    <div class="hero-cta">
+      <button class="btn-coral" data-go="match" type="button">Find resources for a family</button>
+      <button class="btn-ghost" data-go="directory" type="button">Browse the directory</button>
+    </div>
+  </section>
+
+  <section class="statband" aria-label="Directory health">
+    <div class="stat"><b id="statTotal">–</b><span>resources</span></div>
+    <div class="stat"><b id="statActive">–</b><span>active</span></div>
+    <div class="stat"><b id="statVerified">–</b><span>verified in last 90 days</span></div>
+    <div class="stat"><b id="statQueue">–</b><span>updates awaiting review</span></div>
+  </section>
+
+  <section class="steps">
+    <h2 class="section">How it works</h2>
+    <div class="stepgrid">
+      <div class="step">
+        <div class="n">1</div>
+        <h3>Describe the need</h3>
+        <p>Pick categories, the family&rsquo;s city, and their situation.
+           Everything is anonymous &mdash; no names, no records kept.</p>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <h3>Get a shortlist</h3>
+        <p>Instant filtered results, or an AI-ranked list with a plain-language
+           reason for each match. Every entry shows when it was last verified.</p>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <h3>Send it with them</h3>
+        <p>Print a one-page handout, text a phone-friendly link, or email the
+           list &mdash; resource details only, nothing about the family.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="trustband" aria-label="Design principles">
+    <div class="trust"><b>Nothing about the family is saved</b>
+      <span>Matching inputs are used for the answer and discarded.</span></div>
+    <div class="trust"><b>AI suggests, staff approve</b>
+      <span>Every database change waits in the Review Queue for a human.</span></div>
+    <div class="trust"><b>Freshness you can see</b>
+      <span>Anything unverified for 90+ days is flagged: call to confirm.</span></div>
+  </section>
+
+  <footer>Spot something out of date? Open the Directory and edit the resource
+    &mdash; or run verification from the Review Queue.</footer>
+</main>
+</div><!-- /viewHome -->
+
+<div id="viewDirectory" style="display:none">
+<div class="toolbar">
+  <input id="q" type="search" placeholder="Search by name, area, notes, eligibility&hellip;" autocomplete="off">
+  <select id="fCategory"><option value="">All categories</option></select>
+  <select id="fArea"><option value="">All areas</option></select>
+  <select id="fStatus">
+    <option value="">Any status</option>
+    <option value="active">Active</option>
+    <option value="needs_review">Needs review</option>
+    <option value="inactive">Inactive</option>
+  </select>
+  <button id="clearBtn" class="btn-ghost" type="button">Clear</button>
+  <div class="spacer"></div>
+  <button id="addBtn" class="btn-coral" type="button">+ Add resource</button>
+  <a href="/export.xlsx"><button class="btn-ghost" type="button">Export Excel</button></a>
+</div>
+
+<main>
+  <p class="count-line" id="countLine"></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Organization</th>
+        <th>Category</th>
+        <th class="hide-sm">Area</th>
+        <th class="hide-sm">Phone</th>
+        <th>Verified</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+</main>
+</div><!-- /viewDirectory -->
+
+<div id="viewMatch" style="display:none">
+<main>
+  <form class="match-form" id="matchForm">
+    <h2>Match a family to resources</h2>
+    <p class="privacy"><b>Anonymous only</b> &mdash; nothing here is saved.
+      Do not enter names, birth dates, or anything that identifies the family.</p>
+
+    <fieldset class="checks-group">
+      <legend>What do they need? (pick one or more)</legend>
+      <div class="checkgrid" id="needsChecks"></div>
+    </fieldset>
+
+    <div class="match-row">
+      <div class="field">
+        <label for="matchArea">Where do they live? (city)</label>
+        <input type="text" id="matchArea" list="areaList" placeholder="e.g. Commerce City, Thornton, Denver" autocomplete="off">
+        <datalist id="areaList"></datalist>
+      </div>
+    </div>
+
+    <fieldset class="checks-group">
+      <legend>Situation (tick any that apply)</legend>
+      <div class="checkgrid" id="circChecks"></div>
+    </fieldset>
+
+    <div class="field" style="margin-bottom:14px">
+      <label for="matchNotes">Anything else? (optional, anonymous &mdash; used by AI match only)</label>
+      <textarea id="matchNotes" rows="2" placeholder="e.g. child uses a breathing machine at home, electricity bill is very high"></textarea>
+    </div>
+
+    <div class="match-submit">
+      <button class="btn-ghost" id="matchBasicBtn" type="button">Quick search &mdash; instant</button>
+      <button class="btn-coral" id="matchBtn" type="submit">AI match &mdash; ranked with reasons</button>
+      <span id="matchStatus" class="count"></span>
+    </div>
+    <p class="diff-hint" style="margin-top:8px">Quick search filters by category, city and
+      language only &mdash; instant and uses no AI quota. AI match also reads the
+      situation and notes, ranks the list, and explains each pick
+      (one AI request; can take up to a minute on the free tier).</p>
+  </form>
+
+  <div class="print-head">
+    <h2>Community Resources for Your Family</h2>
+    <p id="printDate"></p>
+    <p>Please call ahead to confirm hours and availability. Prepared by your clinic care team.</p>
+  </div>
+
+  <p class="match-note" id="matchNote" style="display:none"></p>
+  <div class="match-actions" id="matchActions" style="display:none">
+    <button class="btn-ghost" id="copyBtn" type="button">Copy list</button>
+    <button class="btn-ghost" id="printBtn" type="button">Print handout</button>
+    <button class="btn-ghost" id="shareBtn" type="button">Get share link</button>
+    <button class="btn-ghost" id="emailBtn" type="button">Email list</button>
+    <span class="count" id="matchCount"></span>
+    <div class="share-box" id="shareBox">
+      <input type="text" id="shareUrl" readonly>
+      <button class="btn-ghost" id="shareCopyBtn" type="button">Copy link</button>
+      <span class="hint">Paste this link into a text message for the family - it opens a
+        phone-friendly page with only the resource list (no family information).</span>
+    </div>
+  </div>
+  <div id="matchResults"></div>
+</main>
+</div><!-- /viewMatch -->
+
+<div id="viewReview" style="display:none">
+<main>
+  <div class="review-bar">
+    <button id="runBtn" class="btn-coral" type="button">Run verification</button>
+    <div class="progress" id="progressWrap" style="display:none"><div id="progressBar"></div></div>
+    <span class="status" id="runStatus"></span>
+  </div>
+  <p class="run-error" id="runError"></p>
+  <div id="reviewList"></div>
+</main>
+</div><!-- /viewReview -->
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" aria-label="Resource details">
+  <div class="drawer-head">
+    <h2 id="drawerTitle">Resource</h2>
+    <button class="close" id="closeBtn" title="Close" type="button">&times;</button>
+  </div>
+  <form id="form">
+    <p class="form-errors" id="formErrors"></p>
+    <div class="grid2">
+      <div class="field"><label>Organization name *</label><input name="org_name" required></div>
+      <div class="field"><label>Category *</label><select name="category" id="categoryInput"></select></div>
+      <div class="field"><label>Type</label><input name="type"></div>
+      <div class="field"><label>Area</label><input name="area" placeholder="e.g. Commerce City, Denver, Not Specified"></div>
+      <div class="field"><label>Phone</label><textarea name="phone" rows="2"></textarea></div>
+      <div class="field"><label>Email</label><input name="email"></div>
+    </div>
+    <div class="field"><label>Location / address</label><textarea name="location" rows="2"></textarea></div>
+    <div class="grid2">
+      <div class="field"><label>Hours</label><input name="hours"></div>
+      <div class="field"><label>Website</label><input name="website"></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea name="notes" rows="3"></textarea></div>
+    <div class="grid2">
+      <div class="field"><label>Bilingual support</label><input name="bilingual_support"></div>
+      <div class="field"><label>Accessibility / how to apply</label><input name="accessibility"></div>
+      <div class="field"><label>Insurance / cost</label><input name="insurance_cost"></div>
+      <div class="field"><label>Seasonal note</label><input name="seasonal_note" placeholder="e.g. LEAP opens Nov 1"></div>
+    </div>
+    <div class="field"><label>Eligibility criteria</label><textarea name="eligibility_criteria" rows="3"></textarea></div>
+    <div class="checks">
+      <label><input type="checkbox" name="income_based"> Income-based</label>
+      <label><input type="checkbox" name="has_flyer"> Flyer available</label>
+      <label><input type="checkbox" name="has_application_form"> Application form</label>
+    </div>
+    <p class="section-note">Record-keeping</p>
+    <div class="grid2">
+      <div class="field"><label>Status</label>
+        <select name="status">
+          <option value="active">Active</option>
+          <option value="needs_review">Needs review</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="field"><label>Last verified</label><input name="last_verified_date" type="date"></div>
+    </div>
+    <div class="field"><label>Verification note</label><input name="verification_note"></div>
+  </form>
+  <div class="drawer-foot">
+    <button class="btn-ghost" id="cancelBtn" type="button">Cancel</button>
+    <button class="btn-primary" id="saveBtn" type="button">Save</button>
+  </div>
+</aside>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const rowsEl = $("#rows"), form = $("#form");
+let resources = [], editingId = null, meta = null;
+
+const esc = (s) => (s ?? "").toString()
+  .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+
+function verifiedBadge(r) {
+  if (!r.last_verified_date) return '<span class="vbadge never">never</span>';
+  const days = Math.floor((Date.now() - new Date(r.last_verified_date + "T00:00")) / 864e5);
+  const label = new Date(r.last_verified_date + "T00:00")
+    .toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  return days <= 90
+    ? `<span class="vbadge ok">&#10003; ${label}</span>`
+    : `<span class="vbadge stale">&#9888; ${label} (${days}d)</span>`;
+}
+
+const STATUS_LABEL = { active: "Active", needs_review: "Needs review", inactive: "Inactive" };
+
+function render() {
+  $("#countLine").textContent =
+    `${resources.length} resource${resources.length === 1 ? "" : "s"} shown - click a row to view or edit`;
+  if (!resources.length) {
+    rowsEl.innerHTML = '<tr><td class="empty" colspan="6">No resources match. Try clearing a filter.</td></tr>';
+    return;
+  }
+  rowsEl.innerHTML = resources.map(r => `
+    <tr data-id="${r.id}">
+      <td class="org"><b>${esc(r.org_name)}</b>${r.type ? `<span class="type">${esc(r.type)}</span>` : ""}</td>
+      <td><span class="chip">${esc(r.category)}</span></td>
+      <td class="hide-sm">${esc(r.area) || '<span style="color:var(--ink-soft)">—</span>'}</td>
+      <td class="hide-sm phone">${esc(r.phone) || "—"}</td>
+      <td>${verifiedBadge(r)}</td>
+      <td><span class="pill ${r.status}">${STATUS_LABEL[r.status] || esc(r.status)}</span></td>
+    </tr>`).join("");
+}
+
+async function load() {
+  const p = new URLSearchParams();
+  const q = $("#q").value.trim();
+  if (q) p.set("q", q);
+  for (const [id, key] of [["#fCategory","category"],["#fArea","area"],["#fStatus","status"]]) {
+    const v = $(id).value;
+    if (v) p.set(key, v);
+  }
+  $("#clearBtn").style.display = [...p.keys()].length ? "" : "none";
+  resources = await (await fetch("/api/resources?" + p)).json();
+  render();
+}
+
+async function loadMeta() {
+  meta = await (await fetch("/api/meta")).json();
+  $("#statTotal").textContent = meta.total;
+  $("#statActive").textContent = meta.active;
+  $("#statVerified").textContent = meta.total
+    ? Math.round(100 * meta.verified_90d / meta.total) + "%" : "0%";
+  $("#statQueue").textContent = meta.pending_review ?? "–";
+  $("#reviewBadge").textContent = meta.pending_review || "";
+  const fill = (sel, items, keep) => {
+    const el = $(sel), old = keep ? el.value : "";
+    el.length = 1;
+    for (const it of items) el.add(new Option(it, it));
+    if (keep) el.value = old;
+  };
+  fill("#fCategory", meta.categories, true);
+  fill("#fArea", meta.areas, true);
+  const cat = $("#categoryInput");
+  cat.length = 0;
+  for (const c of meta.categories) cat.add(new Option(c, c));
+}
+
+/* ---------- drawer ---------- */
+const BOOLS = ["income_based", "has_flyer", "has_application_form"];
+
+function openDrawer(r) {
+  editingId = r ? r.id : null;
+  $("#drawerTitle").textContent = r ? r.org_name : "New resource";
+  $("#formErrors").textContent = "";
+  form.reset();
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    if (el.type === "checkbox") el.checked = !!(r && r[el.name]);
+    else el.value = (r && r[el.name]) ?? "";
+  }
+  if (!r) form.elements.status.value = "active";
+  document.body.classList.add("drawer-open");
+  form.elements.org_name.focus();
+}
+function closeDrawer() { document.body.classList.remove("drawer-open"); }
+
+async function save() {
+  const payload = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    payload[el.name] = el.type === "checkbox" ? (el.checked ? 1 : 0) : el.value;
+  }
+  const url = editingId ? `/api/resources/${editingId}` : "/api/resources";
+  const res = await fetch(url, {
+    method: editingId ? "PUT" : "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    $("#formErrors").textContent = (body.errors || ["Save failed"]).join("\n");
+    return;
+  }
+  closeDrawer();
+  await Promise.all([load(), loadMeta()]);
+}
+
+/* ---------- review queue ---------- */
+const VERDICT_LABEL = {
+  possibly_inactive: "Possibly inactive", changed: "Changed",
+  unreachable: "Unreachable", needs_manual_check: "Needs manual check",
+  error: "Check failed", confirmed: "Confirmed",
+};
+const VERDICT_HINT = {
+  possibly_inactive: "The page suggests this program may have ended. Unreachable or paused is not the same as gone - call to confirm before marking inactive.",
+  unreachable: "The website could not be read. This does NOT mean the program is inactive - verify by phone.",
+  needs_manual_check: "No website on record, so the AI could not check anything.",
+  error: "The AI check itself failed; the resource was not evaluated.",
+};
+
+function showView(which) {
+  for (const v of ["Home", "Directory", "Match", "Review"]) {
+    const on = which === v.toLowerCase();
+    $("#view" + v).style.display = on ? "" : "none";
+    $("#tab" + v).classList.toggle("on", on);
+  }
+  if (which === "review") pollRun(); // renders status + loads the queue
+}
+
+async function loadReview() {
+  const items = await (await fetch("/api/review")).json();
+  const list = $("#reviewList");
+  if (!items.length) {
+    list.innerHTML = '<p class="review-empty">Review queue is clear &mdash; nothing awaiting approval.</p>';
+    return;
+  }
+  list.innerHTML = items.map(c => {
+    const conf = c.confidence != null ? ` &middot; confidence ${Math.round(c.confidence * 100)}%` : "";
+    const link = c.source_url ? ` &middot; <a href="${esc(c.source_url)}" target="_blank" rel="noopener">page checked</a>` : "";
+    const hint = VERDICT_HINT[c.verdict] ? `<p class="meta">${VERDICT_HINT[c.verdict]}</p>` : "";
+    const diff = c.changes.length ? `
+      <table class="diff">
+        <tr><th class="colapply">Apply</th><th>Field</th><th>Current value</th>
+            <th>New value <span style="text-transform:none;font-weight:400">(edit before applying)</span></th></tr>
+        ${c.changes.map(ch => `
+          <tr>
+            <td class="colapply"><input type="checkbox" class="apply-field" data-field="${esc(ch.field)}" checked></td>
+            <td class="fieldname"><b>${esc(ch.field)}</b></td>
+            <td class="old">${esc(ch.old) || "<i>(empty)</i>"}</td>
+            <td><textarea class="new-val" data-field="${esc(ch.field)}" rows="1">${esc(ch.new)}</textarea></td>
+          </tr>`).join("")}
+      </table>
+      <p class="diff-hint">Untick a row to keep the current value. Edit a box to apply your own value (e.g. a county-specific phone).</p>` : "";
+    const err = c.error ? `<p class="meta">Error: ${esc(c.error)}</p>` : "";
+    return `
+    <div class="check-card" data-id="${c.id}">
+      <div class="head">
+        <b>${esc(c.org_name)}</b>
+        <span class="chip">${esc(c.category)}</span>
+        <span class="vpill ${c.verdict}">${VERDICT_LABEL[c.verdict] || esc(c.verdict)}</span>
+        <span class="meta">checked ${esc((c.checked_at || "").slice(0, 10))}${conf}${link}</span>
+      </div>
+      ${hint}
+      ${c.evidence ? `<div class="evidence">${esc(c.evidence)}</div>` : ""}
+      ${diff}${err}
+      <div class="actions">
+        <button class="btn-approve" data-act="approve" type="button">
+          ${c.changes.length ? "Apply ticked changes"
+            : (["confirmed","changed","possibly_inactive"].includes(c.verdict)
+               ? "Acknowledge &mdash; mark verified" : "Dismiss from queue")}</button>
+        <button class="btn-reject" data-act="reject" type="button">Reject &mdash; keep current</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// Grey out a row's value box when its Apply box is unticked.
+$("#reviewList").addEventListener("change", (e) => {
+  if (!e.target.classList.contains("apply-field")) return;
+  const row = e.target.closest("tr");
+  row.classList.toggle("skipped", !e.target.checked);
+  const ta = row.querySelector(".new-val");
+  if (ta) ta.disabled = !e.target.checked;
+});
+
+$("#reviewList").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const card = btn.closest(".check-card");
+  const opts = { method: "POST", headers: { "Content-Type": "application/json" } };
+  if (btn.dataset.act === "approve") {
+    // Send exactly the ticked fields with their (possibly edited) values.
+    const changes = {};
+    card.querySelectorAll("tr").forEach(row => {
+      const cb = row.querySelector(".apply-field");
+      const ta = row.querySelector(".new-val");
+      if (cb && ta && cb.checked) changes[cb.dataset.field] = ta.value;
+    });
+    opts.body = JSON.stringify({ changes });
+  } else {
+    opts.body = "{}";
+  }
+  btn.disabled = true;
+  const res = await fetch(`/api/review/${card.dataset.id}/${btn.dataset.act}`, opts);
+  if (res.ok) {
+    card.style.opacity = "0.4";
+    setTimeout(() => { loadReview(); loadMeta(); load(); }, 250);
+  } else {
+    btn.disabled = false;
+    const body = await res.json().catch(() => ({}));
+    alert((body.errors || ["Action failed"]).join("\n"));
+  }
+});
+
+let pollTimer = null;
+function renderRunStatus(s) {
+  const bar = $("#progressBar"), wrap = $("#progressWrap");
+  $("#runError").textContent = s.error || "";
+  $("#runBtn").disabled = s.running;
+  if (s.running) {
+    wrap.style.display = "";
+    bar.style.width = s.total ? Math.round(100 * s.done / s.total) + "%" : "2%";
+    $("#runStatus").textContent = s.total
+      ? `Checking ${Math.min(s.done + 1, s.total)} of ${s.total}${s.current ? ": " + s.current : ""}…`
+      : "Starting verification…";
+  } else {
+    wrap.style.display = "none";
+    if (s.finished_at && !s.error) {
+      const parts = Object.entries(s.verdicts || {}).map(([k, v]) => `${v} ${k}`);
+      const summary = `${s.done} checked` + (parts.length ? ` (${parts.join(", ")})` : "");
+      if (s.stopped === "rate_limit") {
+        $("#runStatus").textContent =
+          `Paused at your Gemini rate limit - ${summary}. ` +
+          `Verified items are saved below; run again once your quota resets ` +
+          `(free tier resets daily) to continue where this left off.`;
+      } else {
+        $("#runStatus").textContent =
+          `Last run finished ${s.finished_at.replace("T", " ")} - ${summary}`;
+      }
+    } else if (!s.error) {
+      $("#runStatus").textContent = "Checks every resource's website and queues anything that changed.";
+    }
+  }
+}
+
+async function pollRun() {
+  clearTimeout(pollTimer);  // collapse any duplicate polling chain into this one
+  const s = await (await fetch("/api/verify/status")).json();
+  renderRunStatus(s);
+  if (s.running) {
+    pollTimer = setTimeout(pollRun, 1500);
+  } else {
+    loadReview(); loadMeta(); load();
+  }
+}
+
+$("#runBtn").onclick = async () => {
+  $("#runBtn").disabled = true;
+  const res = await fetch("/api/verify/run", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
+  });
+  if (!res.ok && res.status !== 202) {
+    const body = await res.json().catch(() => ({}));
+    $("#runError").textContent = (body.errors || ["Could not start run"]).join("\n");
+    $("#runBtn").disabled = false;
+    return;
+  }
+  pollRun();
+};
+
+$("#tabHome").onclick = () => showView("home");
+$("#tabDirectory").onclick = () => showView("directory");
+$("#tabMatch").onclick = () => showView("match");
+$("#tabReview").onclick = () => showView("review");
+document.querySelectorAll("[data-go]").forEach(b => {
+  b.onclick = () => showView(b.dataset.go);
+});
+
+/* ---------- matching (Find Resources) ---------- */
+const SPANISH = "__spanish__";
+const CIRCUMSTANCES = [
+  [SPANISH, "Needs Spanish / bilingual support"],
+  ["pregnant", "Pregnant"],
+  ["single parent", "Single parent"],
+  ["teen parent", "Teen parent"],
+  ["disability or IDD in family", "Disability / IDD"],
+  ["older adult in household", "Older adult in household"],
+  ["experiencing homelessness", "Experiencing homelessness"],
+  ["domestic violence", "Domestic violence"],
+];
+
+function buildMatchForm() {
+  $("#needsChecks").innerHTML = (meta.categories || []).map(c =>
+    `<label><input type="checkbox" name="need" value="${esc(c)}">${esc(c)}</label>`).join("");
+  $("#circChecks").innerHTML = CIRCUMSTANCES.map(([v, label]) =>
+    `<label><input type="checkbox" name="circ" value="${esc(v)}">${esc(label)}</label>`).join("");
+  const dl = $("#areaList");
+  dl.innerHTML = (meta.areas || [])
+    .filter(a => a !== "Not Specified")
+    .map(a => `<option value="${esc(a)}">`).join("");
+}
+
+function matchFacts(m) {
+  const f = [];
+  if (m.phone) f.push(`<span>Phone:</span> ${esc(m.phone)}`);
+  if (m.location) f.push(`<span>Location:</span> ${esc(m.location)}`);
+  if (m.hours) f.push(`<span>Hours:</span> ${esc(m.hours)}`);
+  if (m.accessibility) f.push(`<span>How to apply:</span> ${esc(m.accessibility)}`);
+  if (m.eligibility_criteria) f.push(`<span>Who qualifies:</span> ${esc(m.eligibility_criteria)}`);
+  if (m.bilingual_support) f.push(`<span>Language support:</span> ${esc(m.bilingual_support)}`);
+  if (m.insurance_cost) f.push(`<span>Cost:</span> ${esc(m.insurance_cost)}`);
+  if (m.notes) f.push(`<span>About:</span> ${esc(m.notes)}`);
+  if (m.website) f.push(`<span>Web:</span> ${esc(m.website)}`);
+  return f.join("<br>");
+}
+
+function matchCard(m) {
+  return `
+    <div class="match-card">
+      <div class="ranknum">${m.rank}</div>
+      <div class="body">
+        <div class="head">
+          <b>${esc(m.org_name)}</b>
+          ${m.stale ? '<span class="stale-flag">&#9888; verified over 90 days ago - call to confirm</span>'
+                    : `<span class="vbadge ok">&#10003; verified ${esc((m.last_verified_date || "").slice(0, 10))}</span>`}
+        </div>
+        ${m.reason ? `<div class="why">${esc(m.reason)}</div>` : ""}
+        <div class="facts">${matchFacts(m)}</div>
+        ${m.seasonal_note ? `<span class="seasonal">Seasonal: ${esc(m.seasonal_note)}</span>` : ""}
+      </div>
+    </div>`;
+}
+
+function renderMatches(data) {
+  const res = $("#matchResults");
+  shareUrl = null;                      // new results -> new share link
+  $("#shareBox").style.display = "none";
+  $("#matchNote").style.display = "none";
+  const noteBits = [];
+  if (data.mode === "fallback" && data.mode_reason) noteBits.push(data.mode_reason);
+  if (data.note) noteBits.push(data.note);
+  if (noteBits.length) {
+    $("#matchNote").textContent = noteBits.join(" ");
+    $("#matchNote").style.display = "";
+  }
+  if (!data.matches.length) {
+    $("#matchActions").style.display = "none";
+    res.innerHTML = '<p class="match-empty">No matches found &mdash; try fewer filters, or check the Directory directly.</p>';
+    return;
+  }
+  $("#matchActions").style.display = "";
+  $("#matchCount").textContent =
+    `${data.matches.length} match${data.matches.length === 1 ? "" : "es"}` +
+    (data.mode === "ai" ? " - ranked by AI, please confirm details"
+                        : " - filtered list, best area fit first");
+  // Group by category; groups appear in rank order of their best match, and
+  // each card keeps its overall rank number.
+  const groups = new Map();
+  data.matches.forEach((m, i) => {
+    if (!groups.has(m.category)) groups.set(m.category, []);
+    groups.get(m.category).push({ ...m, rank: i + 1 });
+  });
+  res.innerHTML = [...groups.entries()].map(([cat, items]) => `
+    <h3 class="match-group">${esc(cat)} <span class="gcount">${items.length}</span></h3>
+    ${items.map(matchCard).join("")}`).join("");
+  lastMatches = data.matches;
+}
+
+let lastMatches = [];
+let shareUrl = null;
+
+async function ensureShareLink() {
+  if (shareUrl) return shareUrl;
+  const res = await fetch("/api/share", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ matches: lastMatches.map(m => ({ id: m.id, reason: m.reason })) }),
+  });
+  if (!res.ok) throw new Error("share failed");
+  shareUrl = (await res.json()).url;
+  return shareUrl;
+}
+
+$("#shareBtn").onclick = async () => {
+  try {
+    const url = await ensureShareLink();
+    $("#shareUrl").value = url;
+    $("#shareBox").style.display = "flex";
+    try { await navigator.clipboard.writeText(url); $("#shareBtn").textContent = "Link copied!"; }
+    catch { $("#shareBtn").textContent = "Link ready below"; }
+  } catch {
+    $("#shareBtn").textContent = "Share failed";
+  }
+  setTimeout(() => { $("#shareBtn").textContent = "Get share link"; }, 1800);
+};
+
+$("#shareCopyBtn").onclick = async () => {
+  $("#shareUrl").select();
+  try { await navigator.clipboard.writeText($("#shareUrl").value);
+        $("#shareCopyBtn").textContent = "Copied!"; }
+  catch { document.execCommand("copy"); $("#shareCopyBtn").textContent = "Copied!"; }
+  setTimeout(() => { $("#shareCopyBtn").textContent = "Copy link"; }, 1600);
+};
+
+$("#emailBtn").onclick = async () => {
+  let url = "";
+  try { url = await ensureShareLink(); } catch { /* email still works without link */ }
+  const subject = "Community resources for your family";
+  const body =
+    "Hello,\n\nHere are community resources our clinic team put together for you:\n\n"
+    + (url ? url + "\n\n" : "")
+    + "Please call ahead to confirm hours and availability.\n\n"
+    + "Warm regards,\nYour clinic care team";
+  location.href = "mailto:?subject=" + encodeURIComponent(subject)
+                + "&body=" + encodeURIComponent(body);
+};
+
+async function doMatch(mode) {
+  const circTicked = [...document.querySelectorAll('input[name="circ"]:checked')].map(x => x.value);
+  const body = {
+    mode,
+    needs: [...document.querySelectorAll('input[name="need"]:checked')].map(x => x.value),
+    area: $("#matchArea").value.trim(),
+    needs_spanish: circTicked.includes(SPANISH),
+    circumstances: circTicked.filter(v => v !== SPANISH),
+    notes: $("#matchNotes").value.trim(),
+  };
+  $("#matchBtn").disabled = $("#matchBasicBtn").disabled = true;
+  $("#matchStatus").innerHTML = '<span class="spin"></span> ' +
+    (mode === "basic" ? "Searching&hellip;"
+                      : "AI matching&hellip; up to a minute on the free tier");
+  $("#matchResults").innerHTML = "";
+  $("#matchActions").style.display = "none";
+  try {
+    const res = await fetch("/api/match", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    renderMatches(await res.json());
+    $("#matchStatus").textContent = "";
+  } catch (err) {
+    $("#matchStatus").textContent = "Matching failed - is the server running?";
+  } finally {
+    $("#matchBtn").disabled = $("#matchBasicBtn").disabled = false;
+  }
+}
+$("#matchForm").addEventListener("submit", (e) => { e.preventDefault(); doMatch("ai"); });
+$("#matchBasicBtn").onclick = () => doMatch("basic");
+
+function matchesAsText() {
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const lines = [`COMMUNITY RESOURCES - prepared ${today}`,
+                 "Please call ahead to confirm hours and availability.", ""];
+  lastMatches.forEach((m, i) => {
+    lines.push(`${i + 1}. ${m.org_name} (${m.category})`);
+    if (m.reason) lines.push(`   Why: ${m.reason}`);
+    if (m.phone) lines.push(`   Phone: ${m.phone}`);
+    if (m.location) lines.push(`   Location: ${m.location}`);
+    if (m.hours) lines.push(`   Hours: ${m.hours}`);
+    if (m.accessibility) lines.push(`   How to apply: ${m.accessibility}`);
+    if (m.eligibility_criteria) lines.push(`   Who qualifies: ${m.eligibility_criteria}`);
+    if (m.bilingual_support) lines.push(`   Language support: ${m.bilingual_support}`);
+    if (m.insurance_cost) lines.push(`   Cost: ${m.insurance_cost}`);
+    if (m.notes) lines.push(`   About: ${m.notes}`);
+    if (m.website) lines.push(`   Web: ${m.website}`);
+    if (m.seasonal_note) lines.push(`   Seasonal: ${m.seasonal_note}`);
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+
+$("#copyBtn").onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(matchesAsText());
+    $("#copyBtn").textContent = "Copied!";
+  } catch {
+    $("#copyBtn").textContent = "Copy failed";
+  }
+  setTimeout(() => { $("#copyBtn").textContent = "Copy list"; }, 1600);
+};
+
+$("#printBtn").onclick = () => {
+  $("#printDate").textContent = "Prepared " + new Date().toLocaleDateString(
+    "en-US", { year: "numeric", month: "long", day: "numeric" });
+  window.print();
+};
+
+/* ---------- events ---------- */
+let t;
+$("#q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(load, 220); });
+for (const id of ["#fCategory", "#fArea", "#fStatus"]) $(id).addEventListener("change", load);
+$("#clearBtn").onclick = () => {
+  $("#q").value = ""; $("#fCategory").value = ""; $("#fArea").value = ""; $("#fStatus").value = "";
+  load();
+};
+rowsEl.addEventListener("click", (e) => {
+  const tr = e.target.closest("tr[data-id]");
+  if (!tr) return;
+  const r = resources.find(x => x.id === +tr.dataset.id);
+  if (r) openDrawer(r);
+});
+$("#addBtn").onclick = () => openDrawer(null);
+$("#closeBtn").onclick = $("#cancelBtn").onclick = $("#overlay").onclick = closeDrawer;
+$("#saveBtn").onclick = save;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+
+loadMeta().then(() => { load(); buildMatchForm(); });
+</script>
+</body>
+</html>

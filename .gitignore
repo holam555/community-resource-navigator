@@ -1,0 +1,18 @@
+# --- Secrets: never commit ---
+gemini_api_key.txt
+
+# --- Local database (rebuild from the source spreadsheet via import_xlsx.py) ---
+resources.db
+
+# --- Your curated dataset & internal planning doc (kept out of the public repo
+#     by default - remove these two lines if you want them included) ---
+*.xlsx
+PRD_community_resource_ai.md
+
+# --- Local / generated ---
+.venv/
+__pycache__/
+*.pyc
+.claude/
+pdf test.pdf
+*.pdf

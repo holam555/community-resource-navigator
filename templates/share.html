@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Community Resources for Your Family</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Albert+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf5ec; --card: #fffdf8; --ink: #1f3833; --ink-soft: #5b6f6a;
+  --line: #e3dac7; --spruce: #2c5f54; --coral: #d95f43;
+  --green-soft: #e2efe4; --green-ink: #2f6b40;
+  --gold: #b98a2e; --gold-soft: #f8efd8;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Albert Sans", sans-serif; background: var(--paper);
+  color: var(--ink); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
+h1 { font-family: "Fraunces", serif; font-size: 24px; font-weight: 700; margin: 0 0 4px; }
+h1 em { font-style: italic; color: var(--coral); }
+.sub { color: var(--ink-soft); font-size: 13.5px; margin: 0 0 20px; }
+h2.group { font-family: "Fraunces", serif; font-size: 18px; font-weight: 600;
+  border-bottom: 2px solid var(--line); padding-bottom: 4px; margin: 26px 0 12px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(31,56,51,.06); }
+.card b.name { font-family: "Fraunces", serif; font-size: 16px; font-weight: 600; }
+.why { margin: 8px 0; padding: 7px 12px; background: var(--green-soft);
+  border-radius: 8px; color: var(--green-ink); font-size: 14px; }
+.facts { font-size: 14px; }
+.facts div { margin: 3px 0; }
+.facts span { color: var(--ink-soft); }
+.facts a { color: var(--spruce); word-break: break-all; }
+.phone a { font-weight: 700; font-size: 16px; color: var(--spruce); text-decoration: none; }
+.seasonal { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600;
+  background: var(--gold-soft); color: var(--gold); border-radius: 999px; padding: 2px 10px; }
+.notfound { text-align: center; padding: 80px 16px; color: var(--ink-soft);
+  font-family: "Fraunces", serif; font-style: italic; font-size: 17px; }
+footer { margin-top: 28px; font-size: 12.5px; color: var(--ink-soft);
+  border-top: 1px solid var(--line); padding-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+{% if groups is none %}
+  <p class="notfound">This link isn&rsquo;t valid or has been removed.<br>
+     Please ask your clinic care team for a new one.</p>
+{% else %}
+  <h1>Community <em>Resources</em> for Your Family</h1>
+  <p class="sub">Prepared by your clinic care team on {{ created }}.
+     Please call ahead to confirm hours and availability.</p>
+
+  {% for category, items in groups %}
+    <h2 class="group">{{ category }}</h2>
+    {% for m in items %}
+      <div class="card">
+        <b class="name">{{ m.org_name }}</b>
+        {% if m.reason %}<div class="why">{{ m.reason }}</div>{% endif %}
+        <div class="facts">
+          {% if m.phone %}<div class="phone"><span>Phone:</span>
+            <a href="tel:{{ m.phone | replace(' ', '') }}">{{ m.phone }}</a></div>{% endif %}
+          {% if m.location %}<div><span>Location:</span> {{ m.location }}</div>{% endif %}
+          {% if m.hours %}<div><span>Hours:</span> {{ m.hours }}</div>{% endif %}
+          {% if m.accessibility %}<div><span>How to apply:</span> {{ m.accessibility }}</div>{% endif %}
+          {% if m.eligibility_criteria %}<div><span>Who qualifies:</span> {{ m.eligibility_criteria }}</div>{% endif %}
+          {% if m.bilingual_support %}<div><span>Language support:</span> {{ m.bilingual_support }}</div>{% endif %}
+          {% if m.insurance_cost %}<div><span>Cost:</span> {{ m.insurance_cost }}</div>{% endif %}
+          {% if m.notes %}<div><span>About:</span> {{ m.notes }}</div>{% endif %}
+          {% if m.website %}<div><span>Web:</span> <a href="{{ m.website }}" rel="noopener">{{ m.website }}</a></div>{% endif %}
+        </div>
+        {% if m.seasonal_note %}<span class="seasonal">Seasonal: {{ m.seasonal_note }}</span>{% endif %}
+      </div>
+    {% endfor %}
+  {% endfor %}
+
+  <footer>This page lists community resources only and contains no personal
+    information. Details can change &mdash; when in doubt, call the organization
+    or your clinic care team.</footer>
+{% endif %}
+</div>
+</body>
+</html>
