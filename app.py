@@ -3,22 +3,73 @@
 Phase 1: searchable/editable resource list + Excel import/export.
 Phase 2: AI verification agent + review queue (see verify_agent.py).
 """
+import hmac
 import io
 import json
+import os
 import secrets
 import threading
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import openpyxl
 from openpyxl.styles import Font
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import (Flask, jsonify, redirect, render_template, request,
+                   send_file, session, url_for)
 
 import matcher
 import verify_agent
-from db import get_conn, init_db
+from db import get_conn, init_db, insert_returning_id
 
 app = Flask(__name__)
 init_db()
+
+# ---------- shared password gate ----------
+# Set APP_PASSWORD to require a shared password for the whole app (staff sign
+# in once per browser, stay signed in 30 days). Leave it unset for open local
+# dev. Family share pages (/l/<token>) are always public - that is the point
+# of a share link, and they contain resource info only.
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+app.permanent_session_lifetime = timedelta(days=30)
+
+_PUBLIC_PATHS = ("/login", "/l/", "/favicon.ico")
+
+
+@app.before_request
+def _gate():
+    if not APP_PASSWORD:
+        return None
+    if request.path == "/login" or request.path.startswith(_PUBLIC_PATHS[1:]):
+        return None
+    if session.get("authed"):
+        return None
+    if request.path.startswith("/api/"):
+        return jsonify({"errors": ["Not signed in"]}), 401
+    return redirect(url_for("login", next=request.path))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if not APP_PASSWORD:
+        return redirect("/")
+    error = None
+    if request.method == "POST":
+        supplied = request.form.get("password", "")
+        if hmac.compare_digest(supplied, APP_PASSWORD):
+            session.permanent = True
+            session["authed"] = True
+            target = request.args.get("next") or "/"
+            if not target.startswith("/"):  # only ever redirect within the app
+                target = "/"
+            return redirect(target)
+        error = "That password isn't right - please try again."
+    return render_template("login.html", error=error)
+
+
+@app.get("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login") if APP_PASSWORD else "/")
 
 SEARCH_FIELDS = ("org_name", "type", "area", "location", "notes",
                  "eligibility_criteria", "phone", "email", "website")
@@ -40,7 +91,7 @@ EXPORT_COLUMNS = ("id", "category", "type", "area", "org_name", "phone",
 
 @app.get("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", password_enabled=bool(APP_PASSWORD))
 
 
 @app.get("/api/resources")
@@ -48,8 +99,8 @@ def list_resources():
     where, params = [], []
     q = request.args.get("q", "").strip()
     if q:
-        like = f"%{q}%"
-        where.append("(" + " OR ".join(f"{f} LIKE ?" for f in SEARCH_FIELDS) + ")")
+        like = f"%{q.lower()}%"
+        where.append("(" + " OR ".join(f"lower({f}) LIKE ?" for f in SEARCH_FIELDS) + ")")
         params += [like] * len(SEARCH_FIELDS)
     for field in ("category", "area", "status"):
         value = request.args.get(field, "").strip()
@@ -59,7 +110,7 @@ def list_resources():
     sql = "SELECT * FROM resources"
     if where:
         sql += " WHERE " + " AND ".join(where)
-    sql += " ORDER BY category, org_name COLLATE NOCASE"
+    sql += " ORDER BY category, lower(org_name)"
     conn = get_conn()
     rows = [dict(r) for r in conn.execute(sql, params)]
     conn.close()
@@ -74,9 +125,11 @@ def meta():
     areas = [r[0] for r in conn.execute(
         "SELECT DISTINCT area FROM resources WHERE area IS NOT NULL ORDER BY area")]
     total, active = conn.execute(
-        "SELECT COUNT(*), SUM(status = 'active') FROM resources").fetchone()
+        "SELECT COUNT(*), SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) "
+        "FROM resources").fetchone()
+    cutoff = (date.today() - timedelta(days=90)).isoformat()
     verified_90d = conn.execute(
-        "SELECT COUNT(*) FROM resources WHERE last_verified_date >= date('now', '-90 days')"
+        "SELECT COUNT(*) FROM resources WHERE last_verified_date >= ?", (cutoff,)
     ).fetchone()[0]
     pending_review = conn.execute(
         "SELECT COUNT(*) FROM verification_checks WHERE review_status = 'pending'"
@@ -85,6 +138,17 @@ def meta():
     return jsonify({"categories": categories, "areas": areas, "total": total,
                     "active": active or 0, "verified_90d": verified_90d,
                     "pending_review": pending_review})
+
+
+def log_edit(conn, resource_id, field, old, new, source):
+    """One audit row per changed field - 'every change has a record'."""
+    conn.execute(
+        "INSERT INTO edit_log (resource_id, field, old_value, new_value, source, changed_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (resource_id, field,
+         None if old is None else str(old),
+         None if new is None else str(new),
+         source, datetime.now().isoformat(timespec="seconds")))
 
 
 def validated_payload(data):
@@ -122,11 +186,13 @@ def create_resource():
     conn = get_conn()
     cols = ", ".join(payload)
     marks = ", ".join("?" for _ in payload)
-    cur = conn.execute(f"INSERT INTO resources ({cols}) VALUES ({marks})",
-                       list(payload.values()))
+    new_id = insert_returning_id(
+        conn, f"INSERT INTO resources ({cols}) VALUES ({marks})",
+        list(payload.values()))
+    log_edit(conn, new_id, "(resource)", None, payload.get("org_name"), "created")
     conn.commit()
     row = dict(conn.execute("SELECT * FROM resources WHERE id = ?",
-                            (cur.lastrowid,)).fetchone())
+                            (new_id,)).fetchone())
     conn.close()
     return jsonify(row), 201
 
@@ -138,18 +204,33 @@ def update_resource(rid):
         return jsonify({"errors": sorted(set(errors))}), 400
     if not payload:
         return jsonify({"errors": ["No editable fields in request"]}), 400
-    payload["updated_at"] = datetime.now().isoformat(timespec="seconds")
     conn = get_conn()
-    sets = ", ".join(f"{f} = ?" for f in payload)
-    cur = conn.execute(f"UPDATE resources SET {sets} WHERE id = ?",
-                       list(payload.values()) + [rid])
-    conn.commit()
-    if cur.rowcount == 0:
+    before = conn.execute("SELECT * FROM resources WHERE id = ?", (rid,)).fetchone()
+    if before is None:
         conn.close()
         return jsonify({"errors": ["Resource not found"]}), 404
+    for field, new in payload.items():
+        old = before[field]
+        if old != new:
+            log_edit(conn, rid, field, old, new, "manual edit")
+    payload["updated_at"] = datetime.now().isoformat(timespec="seconds")
+    sets = ", ".join(f"{f} = ?" for f in payload)
+    conn.execute(f"UPDATE resources SET {sets} WHERE id = ?",
+                 list(payload.values()) + [rid])
+    conn.commit()
     row = dict(conn.execute("SELECT * FROM resources WHERE id = ?", (rid,)).fetchone())
     conn.close()
     return jsonify(row)
+
+
+@app.get("/api/resources/<int:rid>/history")
+def resource_history(rid):
+    conn = get_conn()
+    rows = [dict(r) for r in conn.execute(
+        "SELECT field, old_value, new_value, source, changed_at FROM edit_log "
+        "WHERE resource_id = ? ORDER BY id DESC", (rid,))]
+    conn.close()
+    return jsonify(rows)
 
 
 # ---------- Phase 2: verification + review queue ----------
@@ -244,6 +325,8 @@ def _close_check(check_id, action, overrides=None):
     today = date.today().isoformat()
     applied = []
     if action == "approve":
+        before = conn.execute("SELECT * FROM resources WHERE id = ?",
+                              (check["resource_id"],)).fetchone()
         proposed = json.loads(check["proposed_changes"] or "{}")
         raw = proposed if overrides is None else overrides
         sets, params = [], []
@@ -257,6 +340,9 @@ def _close_check(check_id, action, overrides=None):
             sets.append(f"{field} = ?")
             params.append(value)
             applied.append(field)
+            if before[field] != value:
+                log_edit(conn, check["resource_id"], field, before[field], value,
+                         "verification approved")
         # A staffer reviewing against the page counts as a verification, even
         # if they applied none of the AI's changes (current values confirmed).
         if check["verdict"] in ("confirmed", "changed", "possibly_inactive"):
@@ -367,7 +453,7 @@ def shared_list(token):
 def export_xlsx():
     conn = get_conn()
     rows = conn.execute(
-        "SELECT * FROM resources ORDER BY category, org_name COLLATE NOCASE").fetchall()
+        "SELECT * FROM resources ORDER BY category, lower(org_name)").fetchall()
     conn.close()
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
@@ -391,7 +477,9 @@ def export_xlsx():
 
 if __name__ == "__main__":
     # Local dev only. In production the app is served by gunicorn (see Procfile),
-    # which never enables debug. Set FLASK_DEBUG=1 to turn on the reloader locally.
+    # which never runs this block. Templates hot-reload here for convenience;
+    # set FLASK_DEBUG=1 to also enable the full reloader/debugger.
     import os
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
     app.run(debug=os.environ.get("FLASK_DEBUG") == "1",
             port=int(os.environ.get("PORT", 5057)))

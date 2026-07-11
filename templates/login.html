@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sign in - Community Resource Navigator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Albert+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf5ec; --card: #fffdf8; --ink: #1f3833; --ink-soft: #5b6f6a;
+  --line: #e3dac7; --spruce: #2c5f54; --spruce-deep: #1f4a41; --coral: #d95f43;
+  --red-ink: #a13a2a; --red-soft: #f6e3e0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; display: grid; place-items: center;
+  font-family: "Albert Sans", sans-serif; color: var(--ink);
+  background:
+    radial-gradient(900px 400px at 80% -10%, rgba(217,95,67,.08), transparent 60%),
+    radial-gradient(700px 400px at -10% 20%, rgba(44,95,84,.08), transparent 55%),
+    var(--paper);
+  font-size: 15px;
+}
+.card {
+  width: min(400px, calc(100vw - 32px));
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(31,56,51,.06), 0 12px 32px -16px rgba(31,56,51,.25);
+  padding: 30px 30px 26px;
+}
+.brand { font-family: "Fraunces", serif; font-weight: 600; font-size: 19px; margin-bottom: 4px; }
+.brand .mark { color: var(--coral); margin-right: 6px; }
+p.sub { color: var(--ink-soft); font-size: 13.5px; margin: 0 0 20px; }
+label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+input[type=password] {
+  width: 100%; font: inherit; font-size: 16px; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px;
+  background: #fff; margin-bottom: 14px;
+}
+input[type=password]:focus { outline: 2px solid var(--spruce); outline-offset: 1px; }
+button {
+  width: 100%; font: inherit; font-weight: 600; font-size: 15px;
+  background: var(--spruce); color: #fff; border: none; border-radius: 8px;
+  padding: 12px; cursor: pointer;
+}
+button:hover { background: var(--spruce-deep); }
+:focus-visible { outline: 2px solid var(--spruce); outline-offset: 2px; }
+.error {
+  background: var(--red-soft); color: var(--red-ink); border-radius: 8px;
+  padding: 9px 12px; font-size: 13.5px; margin-bottom: 14px;
+}
+p.hint { color: var(--ink-soft); font-size: 12.5px; margin: 16px 0 0; }
+</style>
+</head>
+<body>
+  <form class="card" method="post">
+    <div class="brand"><span class="mark">&#10037;</span>Community Resource <b>Navigator</b></div>
+    <p class="sub">Staff sign-in &mdash; enter the shared team password.</p>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <label for="password">Team password</label>
+    <input type="password" id="password" name="password" autofocus autocomplete="current-password">
+    <button type="submit">Sign in</button>
+    <p class="hint">You&rsquo;ll stay signed in on this browser for 30 days.
+      Ask your coordinator if you don&rsquo;t know the password.</p>
+  </form>
+</body>
+</html>

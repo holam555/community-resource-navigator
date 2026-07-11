@@ -136,8 +136,9 @@ def run(xlsx_path):
     conn = get_conn()
     existing = conn.execute("SELECT COUNT(*) FROM resources").fetchone()[0]
     if existing:
-        sys.exit(f"resources.db already has {existing} rows - not importing again. "
-                 f"Delete resources.db first to re-import.")
+        sys.exit(f"The database already has {existing} resources - not importing "
+                 f"again (edits would be lost). Empty the resources table first "
+                 f"(local dev: delete resources.db) to re-import.")
 
     now = datetime.now().isoformat(timespec="seconds")
     total = 0

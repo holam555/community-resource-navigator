@@ -85,13 +85,18 @@ header.topbar {
   font-size: clamp(30px, 5.4vw, 46px); line-height: 1.06; margin: 0 0 16px;
   overflow-wrap: anywhere;
 }
-.hero .lede { font-size: 16.5px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 22px; max-width: 54ch; }
+.hero .lede { font-size: 16.5px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 12px; max-width: 54ch; }
+.hero .tagline {
+  font-family: "Fraunces", serif; font-weight: 600; font-size: 18px;
+  color: var(--spruce-deep); margin: 0 0 22px;
+}
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero-cta button { padding: 12px 22px; font-size: 15px; }
 .hero > * { opacity: 0; transform: translateY(10px); animation: rise .5s var(--rise-ease, ease-out) forwards; }
 .hero > *:nth-child(2) { animation-delay: .07s; }
 .hero > *:nth-child(3) { animation-delay: .14s; }
 .hero > *:nth-child(4) { animation-delay: .21s; }
+.hero > *:nth-child(5) { animation-delay: .28s; }
 @keyframes rise { to { opacity: 1; transform: none; } }
 .statband { display: flex; gap: 10px; flex-wrap: wrap; padding: 6px 0 40px; }
 .statband .stat { flex: 1 1 150px; }
@@ -233,6 +238,17 @@ body.drawer-open .drawer { transform: none; }
   font-family: "Fraunces", serif; font-style: italic; color: var(--ink-soft);
   font-size: 14px; margin: 18px 0 10px; border-top: 1px dashed var(--line); padding-top: 14px;
 }
+details.history { margin-top: 18px; border-top: 1px dashed var(--line); padding-top: 12px; }
+details.history summary {
+  cursor: pointer; font-size: 12px; font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.hist-item { font-size: 12.5px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+.hist-item .when { color: var(--ink-soft); }
+.hist-item .src { font-weight: 600; color: var(--spruce); }
+.hist-item .old { color: var(--red-ink); text-decoration: line-through;
+  text-decoration-color: rgba(161,58,42,.4); }
+.hist-item .new { color: var(--green-ink); font-weight: 600; }
 /* ---------- nav tabs (underline style, inside topbar) ---------- */
 nav.tabs { display: flex; gap: 2px; flex-wrap: wrap; }
 nav.tabs button {
@@ -248,6 +264,11 @@ nav.tabs .badge {
   font-size: 11.5px; padding: 1px 6px; vertical-align: 1px;
 }
 nav.tabs .badge:empty { display: none; }
+nav.tabs .signout {
+  align-self: center; font-size: 12.5px; color: var(--ink-soft);
+  text-decoration: none; padding: 6px 10px; border-radius: 6px; margin-left: 6px;
+}
+nav.tabs .signout:hover { color: var(--ink); background: rgba(44,95,84,.06); }
 
 /* ---------- review queue ---------- */
 .review-bar {
@@ -439,6 +460,7 @@ h3.match-group .gcount {
     <button id="tabDirectory" type="button">Directory</button>
     <button id="tabMatch" type="button">Find Resources</button>
     <button id="tabReview" type="button">Review Queue<span class="badge" id="reviewBadge"></span></button>
+    {% if password_enabled %}<a class="signout" href="/logout" title="Sign out of this browser">Sign out</a>{% endif %}
   </nav>
 </header>
 
@@ -450,6 +472,7 @@ h3.match-group .gcount {
     <p class="lede">Search a verified directory of local assistance programs, match
       them to a family&rsquo;s situation in seconds, and send the list home with
       them &mdash; printed, texted, or emailed.</p>
+    <p class="tagline">Every family leaves with the right resources.</p>
     <div class="hero-cta">
       <button class="btn-coral" data-go="match" type="button">Find resources for a family</button>
       <button class="btn-ghost" data-go="directory" type="button">Browse the directory</button>
@@ -659,6 +682,10 @@ h3.match-group .gcount {
       <div class="field"><label>Last verified</label><input name="last_verified_date" type="date"></div>
     </div>
     <div class="field"><label>Verification note</label><input name="verification_note"></div>
+    <details class="history" id="historyBox" style="display:none">
+      <summary>Change history</summary>
+      <div id="historyList"></div>
+    </details>
   </form>
   <div class="drawer-foot">
     <button class="btn-ghost" id="cancelBtn" type="button">Cancel</button>
@@ -718,7 +745,9 @@ async function load() {
 }
 
 async function loadMeta() {
-  meta = await (await fetch("/api/meta")).json();
+  const res = await fetch("/api/meta");
+  if (res.status === 401) { location.href = "/login"; return; }  // session expired
+  meta = await res.json();
   $("#statTotal").textContent = meta.total;
   $("#statActive").textContent = meta.active;
   $("#statVerified").textContent = meta.total
@@ -752,6 +781,23 @@ function openDrawer(r) {
     else el.value = (r && r[el.name]) ?? "";
   }
   if (!r) form.elements.status.value = "active";
+  // change history (audit log) - only for existing resources
+  const hb = $("#historyBox");
+  hb.style.display = r ? "" : "none";
+  hb.open = false;
+  if (r) {
+    $("#historyList").innerHTML = '<div class="hist-item">Loading…</div>';
+    fetch(`/api/resources/${r.id}/history`).then(x => x.json()).then(items => {
+      $("#historyList").innerHTML = items.length ? items.map(h => `
+        <div class="hist-item">
+          <span class="when">${esc((h.changed_at || "").replace("T", " "))}</span>
+          &middot; <span class="src">${esc(h.source)}</span> &middot; <b>${esc(h.field)}</b><br>
+          <span class="old">${esc(h.old_value) || "<i>(empty)</i>"}</span> &rarr;
+          <span class="new">${esc(h.new_value) || "<i>(empty)</i>"}</span>
+        </div>`).join("")
+        : '<div class="hist-item">No recorded changes yet - history starts from today.</div>';
+    }).catch(() => { $("#historyList").innerHTML = ""; });
+  }
   document.body.classList.add("drawer-open");
   form.elements.org_name.focus();
 }

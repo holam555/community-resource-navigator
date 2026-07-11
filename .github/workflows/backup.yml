@@ -1,0 +1,50 @@
+name: Weekly database backup
+
+# Dumps the Supabase database every Monday, encrypts it, and stores it as a
+# workflow artifact (kept 90 days - a rolling window of ~13 weekly backups).
+# Connecting weekly also counts as activity, which keeps a free-tier Supabase
+# project from pausing.
+#
+# Needs two repository secrets (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_DB_URL    - the SESSION-pooler connection string (port 5432)
+#   BACKUP_PASSPHRASE  - any long random string; keep a copy somewhere safe
+#
+# To restore (or just to read a backup):
+#   openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:YOUR_PASSPHRASE \
+#     -in backup.sql.gz.enc | gunzip > backup.sql
+#   psql "$DATABASE_URL" < backup.sql
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"   # Mondays 09:00 UTC
+  workflow_dispatch: {}    # allows a manual "Run workflow" button too
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo YES=1 /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump and encrypt
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          pg_dump "$DB_URL" --no-owner --no-privileges | gzip > backup.sql.gz
+          openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:PASSPHRASE \
+            -in backup.sql.gz -out backup.sql.gz.enc
+          rm backup.sql.gz
+          ls -lh backup.sql.gz.enc
+
+      - name: Store as artifact (kept 90 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: backup.sql.gz.enc
+          retention-days: 90

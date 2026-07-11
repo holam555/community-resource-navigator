@@ -63,9 +63,10 @@ def _candidates(conn, profile):
     if area:
         # Keep resources that serve this area, an unspecified/statewide area,
         # or a county-wide area (the model can judge county fit better than SQL).
+        # LIKE patterns are parameters, not literals - portable + pooler-safe.
         sql += (" AND (area IS NULL OR area = 'Not Specified' "
-                "OR area LIKE '%County%' OR instr(lower(area), lower(?)) > 0)")
-        params.append(area)
+                "OR area LIKE ? OR lower(area) LIKE ?)")
+        params += ["%County%", f"%{area.lower()}%"]
     rows = [dict(r) for r in conn.execute(sql, params)]
 
     def sort_key(r):

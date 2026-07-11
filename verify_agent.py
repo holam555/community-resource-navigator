@@ -400,7 +400,8 @@ def run(limit=None, category=None, resource_id=None, log=print):
         if category:
             sql += " AND category = ?"
             params.append(category)
-    sql += " ORDER BY last_verified_date, id"  # stalest first
+    # stalest first; COALESCE keeps never-verified rows first on both backends
+    sql += " ORDER BY COALESCE(last_verified_date, ''), id"
     if limit:
         sql += " LIMIT ?"
         params.append(limit)

@@ -24,25 +24,35 @@ Then paste a Gemini API key into `gemini_api_key.txt` for verification/AI match
 
 ## Database & hosting
 
-The app uses **SQLite** (`resources.db`, one file, no separate service). It is
-**read-write**: staff edits, verification results, approvals, and shared match
-links are all written back to it. That shapes where you can host it.
+Two interchangeable backends behind one code path ([db.py](db.py)):
 
-- **Recommended for the pilot — a host that runs a normal always-on process
-  with a persistent disk:** Render, Railway, or Fly.io. SQLite works unchanged.
-  Start command is in the `Procfile` (`gunicorn app:app`). Add a persistent
-  disk mounted where `resources.db` lives so data survives redeploys, set the
-  `GEMINI_API_KEY` env var, and seed once with `import_xlsx.py`.
-- **Vercel is not a good fit as-is.** Vercel runs Python as *serverless
-  functions* with a disposable, read-only filesystem and a short time limit, so
-  (a) every edit/approval/verification result would be lost, and (b) the
-  minutes-long verification run (a background thread) can't run there. To use
-  Vercel you'd swap SQLite for a hosted database (Turso is SQLite-compatible and
-  has a free tier; or Postgres/Neon) and move verification to a scheduled job —
-  doable, but real work. For a first staff pilot, use one of the hosts above.
+- **Local dev:** SQLite (`resources.db`) — zero setup, used automatically when
+  `DATABASE_URL` is not set.
+- **Production:** **Postgres (Supabase)** — set `DATABASE_URL` to the Supabase
+  *Session pooler* connection string. All data (edits, verification history,
+  approvals, share links, audit log) lives there, so the web app itself is
+  stateless and can run on a free host.
 
-**Config via environment variables:** `GEMINI_API_KEY` (instead of the file),
-`PORT` (host sets this), `FLASK_DEBUG=1` (local only — never in production).
+**Deploying for real staff: follow [DEPLOY.md](DEPLOY.md)** — click-by-click
+Render + Supabase setup (both free tiers), UptimeRobot keep-alive, and weekly
+encrypted backups via GitHub Actions. One-time data copy:
+`DATABASE_URL=... python migrate_to_supabase.py`.
+
+## Access & audit
+
+- **Shared password:** set the `APP_PASSWORD` env var and the whole app
+  requires a one-time sign-in per browser (30 days). Family share pages
+  (`/l/...`) stay public by design — they contain resource info only. Leave
+  `APP_PASSWORD` unset for open local dev. Also set `SECRET_KEY` (any long
+  random string) so sign-ins survive restarts.
+- **Audit log:** every change to a resource — manual edit, verification
+  approval, creation — is recorded per-field (old value → new value, source,
+  timestamp) in `edit_log`, and shown under **Change history** in the edit
+  drawer.
+
+**Config via environment variables:** `DATABASE_URL`, `GEMINI_API_KEY`,
+`APP_PASSWORD`, `SECRET_KEY`, `PORT` (host sets this), `FLASK_DEBUG=1`
+(local only — never in production).
 
 ## Verification (Phase 2)
 
