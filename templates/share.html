@@ -7,39 +7,42 @@
 <title>Community Resources for Your Family</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Albert+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,600;6..72,700;6..72,800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --paper: #faf5ec; --card: #fffdf8; --ink: #1f3833; --ink-soft: #5b6f6a;
-  --line: #e3dac7; --spruce: #2c5f54; --coral: #d95f43;
-  --green-soft: #e2efe4; --green-ink: #2f6b40;
-  --gold: #b98a2e; --gold-soft: #f8efd8;
+  --paper: #f4f1e8; --card: #faf8f0; --ink: #1d1b16; --ink-soft: #5f594a;
+  --line: #cfc7b0; --spruce: #2e4636; --coral: #96351e;
+  --green-soft: #e3ead7; --green-ink: #33582d;
+  --gold: #7d5b1a; --gold-soft: #f1e7cd;
 }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: "Albert Sans", sans-serif; background: var(--paper);
-  color: var(--ink); font-size: 15px; line-height: 1.5; }
+body { margin: 0; font-family: "Public Sans", sans-serif; background: var(--paper);
+  color: var(--ink); font-size: 15px; line-height: 1.55; }
 .wrap { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
-h1 { font-family: "Fraunces", serif; font-size: 24px; font-weight: 700; margin: 0 0 4px; }
-h1 em { font-style: italic; color: var(--coral); }
-.sub { color: var(--ink-soft); font-size: 13.5px; margin: 0 0 20px; }
-h2.group { font-family: "Fraunces", serif; font-size: 18px; font-weight: 600;
-  border-bottom: 2px solid var(--line); padding-bottom: 4px; margin: 26px 0 12px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-  padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(31,56,51,.06); }
-.card b.name { font-family: "Fraunces", serif; font-size: 16px; font-weight: 600; }
+.masthead { border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 4px; }
+h1 { font-family: "Newsreader", Georgia, serif; font-size: 26px; font-weight: 800;
+  letter-spacing: -.01em; margin: 0 0 4px; }
+h1 .mark { color: var(--coral); }
+.sub { color: var(--ink-soft); font-size: 13.5px; margin: 10px 0 22px; }
+h2.group { font-family: "Newsreader", Georgia, serif; font-size: 19px; font-weight: 700;
+  border-bottom: 3px double var(--ink); padding-bottom: 5px; margin: 28px 0 12px; }
+.card { background: var(--card); border: 1px solid var(--line);
+  border-left: 3px solid var(--ink); padding: 14px 16px; margin-bottom: 12px; }
+.card b.name { font-family: "Newsreader", Georgia, serif; font-size: 17px; font-weight: 700; }
 .why { margin: 8px 0; padding: 7px 12px; background: var(--green-soft);
-  border-radius: 8px; color: var(--green-ink); font-size: 14px; }
+  border-left: 2px solid var(--green-ink); color: var(--green-ink); font-size: 14px; }
 .facts { font-size: 14px; }
 .facts div { margin: 3px 0; }
 .facts span { color: var(--ink-soft); }
-.facts a { color: var(--spruce); word-break: break-all; }
-.phone a { font-weight: 700; font-size: 16px; color: var(--spruce); text-decoration: none; }
-.seasonal { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600;
-  background: var(--gold-soft); color: var(--gold); border-radius: 999px; padding: 2px 10px; }
+.facts a { color: var(--spruce); word-break: break-all; text-underline-offset: 2px; }
+.phone a { font-weight: 700; font-size: 16.5px; color: var(--spruce); text-decoration: none; }
+.seasonal { display: inline-block; margin-top: 8px; font-family: "IBM Plex Mono", monospace;
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+  background: var(--gold-soft); color: var(--gold); padding: 3px 8px; }
 .notfound { text-align: center; padding: 80px 16px; color: var(--ink-soft);
-  font-family: "Fraunces", serif; font-style: italic; font-size: 17px; }
-footer { margin-top: 28px; font-size: 12.5px; color: var(--ink-soft);
-  border-top: 1px solid var(--line); padding-top: 12px; }
+  font-family: "Newsreader", Georgia, serif; font-size: 18px; }
+footer { margin-top: 28px; font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+  color: var(--ink-soft); border-top: 2px solid var(--ink); padding-top: 12px; }
 </style>
 </head>
 <body>
@@ -48,7 +51,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--ink-soft);
   <p class="notfound">This link isn&rsquo;t valid or has been removed.<br>
      Please ask your clinic care team for a new one.</p>
 {% else %}
-  <h1>Community <em>Resources</em> for Your Family</h1>
+  <div class="masthead">
+    <h1><span class="mark">&#10037;</span> Community Resources for Your Family</h1>
+  </div>
   <p class="sub">Prepared by your clinic care team on {{ created }}.
      Please call ahead to confirm hours and availability.</p>
 
@@ -76,7 +81,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--ink-soft);
   {% endfor %}
 
   <footer>This page lists community resources only and contains no personal
-    information. Details can change &mdash; when in doubt, call the organization
+    information. Details can change. When in doubt, call the organization
     or your clinic care team.</footer>
 {% endif %}
 </div>
