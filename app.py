@@ -10,6 +10,7 @@ import os
 import secrets
 import threading
 from datetime import date, datetime, timedelta
+from functools import wraps
 
 import openpyxl
 from openpyxl.styles import Font
@@ -23,41 +24,55 @@ from db import get_conn, init_db, insert_returning_id
 app = Flask(__name__)
 init_db()
 
-# ---------- shared password gate ----------
-# Set APP_PASSWORD to require a shared password for the whole app (staff sign
-# in once per browser, stay signed in 30 days). Leave it unset for open local
-# dev. Family share pages (/l/<token>) are always public - that is the point
-# of a share link, and they contain resource info only.
+# ---------- staff sign-in (per-action, not whole-app) ----------
+# The public may browse/search the directory and use Quick search. Actions that
+# change data, spend AI quota, or export in bulk require the shared team
+# password (APP_PASSWORD). Staff sign in once per browser, valid 30 days.
+# With APP_PASSWORD unset (local dev) everything is open. Family share pages
+# (/l/<token>) are always public - resource info only, protected by the token.
 APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 app.permanent_session_lifetime = timedelta(days=30)
 
-_PUBLIC_PATHS = ("/login", "/l/", "/favicon.ico")
+
+def is_staff():
+    return (not APP_PASSWORD) or bool(session.get("authed"))
 
 
-@app.before_request
-def _gate():
-    if not APP_PASSWORD:
-        return None
-    if request.path == "/login" or request.path.startswith(_PUBLIC_PATHS[1:]):
-        return None
-    if session.get("authed"):
-        return None
-    if request.path.startswith("/api/"):
-        return jsonify({"errors": ["Not signed in"]}), 401
-    return redirect(url_for("login", next=request.path))
+def staff_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if is_staff():
+            return view(*args, **kwargs)
+        return jsonify({"errors": ["Please sign in as staff to do that."]}), 401
+    return wrapped
+
+
+def _sign_in(password):
+    if APP_PASSWORD and hmac.compare_digest(password, APP_PASSWORD):
+        session.permanent = True
+        session["authed"] = True
+        return True
+    return not APP_PASSWORD  # open in local dev
+
+
+@app.post("/api/login")
+def api_login():
+    """Used by the in-page sign-in prompt; returns JSON, no navigation."""
+    password = (request.get_json(silent=True) or {}).get("password", "")
+    if _sign_in(password):
+        return jsonify({"ok": True})
+    return jsonify({"errors": ["That password isn't right - please try again."]}), 401
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """Full-page sign-in, used when a gated link (e.g. export) is opened directly."""
     if not APP_PASSWORD:
         return redirect("/")
     error = None
     if request.method == "POST":
-        supplied = request.form.get("password", "")
-        if hmac.compare_digest(supplied, APP_PASSWORD):
-            session.permanent = True
-            session["authed"] = True
+        if _sign_in(request.form.get("password", "")):
             target = request.args.get("next") or "/"
             if not target.startswith("/"):  # only ever redirect within the app
                 target = "/"
@@ -69,7 +84,7 @@ def login():
 @app.get("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login") if APP_PASSWORD else "/")
+    return redirect("/")
 
 SEARCH_FIELDS = ("org_name", "type", "area", "location", "notes",
                  "eligibility_criteria", "phone", "email", "website")
@@ -137,7 +152,7 @@ def meta():
     conn.close()
     return jsonify({"categories": categories, "areas": areas, "total": total,
                     "active": active or 0, "verified_90d": verified_90d,
-                    "pending_review": pending_review})
+                    "pending_review": pending_review, "staff": is_staff()})
 
 
 def log_edit(conn, resource_id, field, old, new, source):
@@ -172,6 +187,7 @@ def validated_payload(data):
 
 
 @app.post("/api/resources")
+@staff_required
 def create_resource():
     payload, errors = validated_payload(request.get_json(force=True))
     if not payload.get("org_name"):
@@ -198,6 +214,7 @@ def create_resource():
 
 
 @app.put("/api/resources/<int:rid>")
+@staff_required
 def update_resource(rid):
     payload, errors = validated_payload(request.get_json(force=True))
     if errors:
@@ -257,6 +274,7 @@ def _run_verification(limit, category):
 
 
 @app.post("/api/verify/run")
+@staff_required
 def verify_run():
     data = request.get_json(silent=True) or {}
     with _verify_lock:
@@ -369,6 +387,7 @@ def _close_check(check_id, action, overrides=None):
 
 
 @app.post("/api/review/<int:check_id>/approve")
+@staff_required
 def approve_check(check_id):
     data = request.get_json(silent=True) or {}
     # 'changes' present (even {}) means "apply exactly these"; absent means "apply all".
@@ -377,6 +396,7 @@ def approve_check(check_id):
 
 
 @app.post("/api/review/<int:check_id>/reject")
+@staff_required
 def reject_check(check_id):
     return _close_check(check_id, "reject")
 
@@ -396,6 +416,10 @@ def match():
         "notes": str(data.get("notes") or "").strip()[:1000],
     }
     use_ai = (data.get("mode") or "ai") != "basic"
+    if use_ai and not is_staff():
+        # Quick search stays open to everyone; AI ranking spends quota -> staff only.
+        return jsonify({"errors": ["Please sign in as staff to use AI match. "
+                                   "Quick search is open to everyone."]}), 401
     return jsonify(matcher.find_matches(profile, use_ai=use_ai))
 
 
@@ -451,6 +475,10 @@ def shared_list(token):
 
 @app.get("/export.xlsx")
 def export_xlsx():
+    # Bulk export is staff-only. A direct browser hit redirects to the sign-in
+    # page; the in-app button signs in first so this normally passes.
+    if not is_staff():
+        return redirect(url_for("login", next="/export.xlsx"))
     conn = get_conn()
     rows = conn.execute(
         "SELECT * FROM resources ORDER BY category, lower(org_name)").fetchall()

@@ -270,6 +270,30 @@ nav.tabs .signout {
 }
 nav.tabs .signout:hover { color: var(--ink); background: rgba(44,95,84,.06); }
 
+/* ---------- staff sign-in modal ---------- */
+.login-overlay {
+  position: fixed; inset: 0; background: rgba(31,56,51,.34);
+  opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 60;
+}
+.login-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -44%);
+  width: min(390px, calc(100vw - 32px));
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(31,56,51,.06), 0 16px 40px -16px rgba(31,56,51,.35);
+  padding: 24px 24px 22px; z-index: 61;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+}
+body.login-open .login-overlay { opacity: 1; pointer-events: auto; }
+body.login-open .login-modal { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+.login-modal h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 20px; margin: 0 0 4px; }
+.login-modal .sub { color: var(--ink-soft); font-size: 13.5px; margin: 0 0 16px; }
+.login-modal input {
+  width: 100%; font: inherit; font-size: 16px; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; background: #fff;
+}
+.login-modal input:focus { outline: 2px solid var(--spruce); outline-offset: 1px; }
+.login-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
 /* ---------- review queue ---------- */
 .review-bar {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -460,7 +484,7 @@ h3.match-group .gcount {
     <button id="tabDirectory" type="button">Directory</button>
     <button id="tabMatch" type="button">Find Resources</button>
     <button id="tabReview" type="button">Review Queue<span class="badge" id="reviewBadge"></span></button>
-    {% if password_enabled %}<a class="signout" href="/logout" title="Sign out of this browser">Sign out</a>{% endif %}
+    <a class="signout" id="authLink" href="#" style="display:none"></a>
   </nav>
 </header>
 
@@ -538,7 +562,7 @@ h3.match-group .gcount {
   <button id="clearBtn" class="btn-ghost" type="button">Clear</button>
   <div class="spacer"></div>
   <button id="addBtn" class="btn-coral" type="button">+ Add resource</button>
-  <a href="/export.xlsx"><button class="btn-ghost" type="button">Export Excel</button></a>
+  <button class="btn-ghost" id="exportBtn" type="button">Export Excel</button>
 </div>
 
 <main>
@@ -636,6 +660,18 @@ h3.match-group .gcount {
 </main>
 </div><!-- /viewReview -->
 
+<div class="login-overlay" id="loginOverlay"></div>
+<div class="login-modal" id="loginModal" role="dialog" aria-modal="true" aria-label="Staff sign-in">
+  <h2>Staff sign-in</h2>
+  <p class="sub">This action is for clinic staff. Enter the shared team password to continue.</p>
+  <p class="form-errors" id="loginError"></p>
+  <input type="password" id="loginPassword" autocomplete="current-password" placeholder="Team password">
+  <div class="login-actions">
+    <button class="btn-ghost" id="loginCancel" type="button">Cancel</button>
+    <button class="btn-primary" id="loginSubmit" type="button">Sign in</button>
+  </div>
+</div>
+
 <div class="overlay" id="overlay"></div>
 <aside class="drawer" aria-label="Resource details">
   <div class="drawer-head">
@@ -697,6 +733,58 @@ h3.match-group .gcount {
 const $ = (s) => document.querySelector(s);
 const rowsEl = $("#rows"), form = $("#form");
 let resources = [], editingId = null, meta = null;
+const PASSWORD_ENABLED = {{ 'true' if password_enabled else 'false' }};
+let isStaff = !PASSWORD_ENABLED;   // open when no password is configured
+
+/* ---------- staff sign-in prompt (resolves when signed in) ---------- */
+let _loginResolve = null, _loginReject = null;
+function ensureStaff() {
+  if (isStaff) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    _loginResolve = resolve; _loginReject = reject;
+    $("#loginError").textContent = "";
+    $("#loginPassword").value = "";
+    document.body.classList.add("login-open");
+    setTimeout(() => $("#loginPassword").focus(), 60);
+  });
+}
+function closeLogin(ok) {
+  document.body.classList.remove("login-open");
+  const res = _loginResolve, rej = _loginReject;
+  _loginResolve = _loginReject = null;
+  if (ok && res) res();
+  else if (!ok && rej) rej(new Error("cancelled"));
+}
+async function submitLogin() {
+  const res = await fetch("/api/login", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: $("#loginPassword").value }),
+  });
+  if (res.ok) { isStaff = true; updateAuthUI(); closeLogin(true); }
+  else {
+    const b = await res.json().catch(() => ({}));
+    $("#loginError").textContent = (b.errors || ["Sign-in failed"]).join(" ");
+    $("#loginPassword").select();
+  }
+}
+// Run a staff-only action: prompt if needed, do nothing if the user cancels.
+function withStaff(fn) { ensureStaff().then(fn).catch(() => {}); }
+
+function updateAuthUI() {
+  const link = $("#authLink");
+  if (!PASSWORD_ENABLED) { link.style.display = "none"; return; }
+  link.style.display = "";
+  if (isStaff) {
+    link.textContent = "Sign out"; link.href = "/logout"; link.onclick = null;
+  } else {
+    link.textContent = "Staff sign in"; link.href = "#";
+    link.onclick = (e) => { e.preventDefault(); withStaff(updateAuthUI); };
+  }
+}
+$("#loginSubmit").onclick = submitLogin;
+$("#loginCancel").onclick = () => closeLogin(false);
+$("#loginOverlay").onclick = () => closeLogin(false);
+$("#loginPassword").addEventListener("keydown", (e) => { if (e.key === "Enter") submitLogin(); });
 
 const esc = (s) => (s ?? "").toString()
   .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
@@ -754,6 +842,8 @@ async function loadMeta() {
     ? Math.round(100 * meta.verified_90d / meta.total) + "%" : "0%";
   $("#statQueue").textContent = meta.pending_review ?? "–";
   $("#reviewBadge").textContent = meta.pending_review || "";
+  isStaff = !PASSWORD_ENABLED || !!meta.staff;
+  updateAuthUI();
   const fill = (sel, items, keep) => {
     const el = $(sel), old = keep ? el.value : "";
     el.length = 1;
@@ -906,6 +996,7 @@ $("#reviewList").addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-act]");
   if (!btn) return;
   const card = btn.closest(".check-card");
+  try { await ensureStaff(); } catch { return; }  // approve/reject write data
   const opts = { method: "POST", headers: { "Content-Type": "application/json" } };
   if (btn.dataset.act === "approve") {
     // Send exactly the ticked fields with their (possibly edited) values.
@@ -974,6 +1065,7 @@ async function pollRun() {
 }
 
 $("#runBtn").onclick = async () => {
+  try { await ensureStaff(); } catch { return; }  // verification writes + spends quota
   $("#runBtn").disabled = true;
   const res = await fetch("/api/verify/run", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
@@ -1162,7 +1254,10 @@ async function doMatch(mode) {
     $("#matchBtn").disabled = $("#matchBasicBtn").disabled = false;
   }
 }
-$("#matchForm").addEventListener("submit", (e) => { e.preventDefault(); doMatch("ai"); });
+// AI match spends quota -> staff only. Quick search is open to everyone.
+$("#matchForm").addEventListener("submit", (e) => {
+  e.preventDefault(); withStaff(() => doMatch("ai"));
+});
 $("#matchBasicBtn").onclick = () => doMatch("basic");
 
 function matchesAsText() {
@@ -1217,9 +1312,10 @@ rowsEl.addEventListener("click", (e) => {
   const r = resources.find(x => x.id === +tr.dataset.id);
   if (r) openDrawer(r);
 });
-$("#addBtn").onclick = () => openDrawer(null);
+$("#addBtn").onclick = () => withStaff(() => openDrawer(null));
 $("#closeBtn").onclick = $("#cancelBtn").onclick = $("#overlay").onclick = closeDrawer;
-$("#saveBtn").onclick = save;
+$("#saveBtn").onclick = () => withStaff(save);
+$("#exportBtn").onclick = () => withStaff(() => { window.location = "/export.xlsx"; });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
 
 loadMeta().then(() => { load(); buildMatchForm(); });

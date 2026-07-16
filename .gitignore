@@ -1,5 +1,8 @@
 # --- Secrets: never commit ---
 gemini_api_key.txt
+DEPLOY_SECRETS.local.md
+*.local.md
+*.local.txt
 
 # --- Local database (rebuild from the source spreadsheet via import_xlsx.py) ---
 resources.db
@@ -16,3 +19,4 @@ __pycache__/
 .claude/
 pdf test.pdf
 *.pdf
+.DS_Store
